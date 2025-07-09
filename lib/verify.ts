@@ -1,4 +1,4 @@
-import { MiniKit } from "@worldcoin/minikit-js"
+import { MiniKit, VerificationLevel } from "@worldcoin/minikit-js"
 
 export const verifyWorldId = async (action = "claim-daily-vldx") => {
   if (!MiniKit.isInstalled()) {
@@ -8,8 +8,8 @@ export const verifyWorldId = async (action = "claim-daily-vldx") => {
   try {
     const { commandPayload, finalPayload } = await MiniKit.commandsAsync.verify({
       action,
-      signal: MiniKit.walletAddress || "",
-      verification_level: "orb", // or 'device'
+      signal: MiniKit.user?.walletAddress || "",
+      verification_level: VerificationLevel.Orb, // or VerificationLevel.Device
     })
 
     // Verify proof on backend
@@ -19,12 +19,12 @@ export const verifyWorldId = async (action = "claim-daily-vldx") => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        proof: finalPayload.proof,
-        nullifier_hash: finalPayload.nullifier_hash,
-        merkle_root: finalPayload.merkle_root,
-        verification_level: finalPayload.verification_level,
+        proof: (finalPayload as any).proof,
+        nullifier_hash: (finalPayload as any).nullifier_hash,
+        merkle_root: (finalPayload as any).merkle_root,
+        verification_level: (finalPayload as any).verification_level,
         action,
-        signal: MiniKit.walletAddress || "",
+        signal: MiniKit.user?.walletAddress || "",
       }),
     })
 

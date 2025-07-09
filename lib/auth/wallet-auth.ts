@@ -65,7 +65,7 @@ export class WalletAuthService {
   static async initiateWalletAuth(): Promise<SiwePayload> {
     const MiniKit = (typeof window !== "undefined" && (window as any).MiniKit) ? (window as any).MiniKit : null;
     if (!MiniKit || !MiniKit.isInstalled()) {
-      alert("MiniKit hanya tersedia dalam World App. Sila buka aplikasi ini melalui World App.");
+      alert("MiniKit is only available in the World App. Please open this application via the World App.");
       throw new Error("MiniKit not installed");
     }
 

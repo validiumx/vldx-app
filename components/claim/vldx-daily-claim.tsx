@@ -66,7 +66,7 @@ export function VLDXDailyClaim() {
     const result = await executeClaim(amount)
     if (!result.success) {
       setClaimError(result.error || "Claim failed")
-    } else {
+      } else {
       // Terus tunjuk countdown 24 jam dan mesej selepas claim
       const target = new Date(Date.now() + 24 * 60 * 60 * 1000)
       setJustClaimed(true)
@@ -130,15 +130,15 @@ export function VLDXDailyClaim() {
 
       {/* Balance Card */}
       <div className="rounded-xl shadow bg-white/10 p-4 flex items-center mt-2 mb-2">
-        <div className="w-12 h-12 relative mr-4">
-          <Image src="/images/VLDX_logo.png" alt="VLDX" fill className="object-cover rounded-full" />
-        </div>
-        <div className="flex-1">
+          <div className="w-12 h-12 relative mr-4">
+            <Image src="/images/VLDX_logo.png" alt="VLDX" fill className="object-cover rounded-full" />
+          </div>
+          <div className="flex-1">
           {/* Username paparan */}
           <p className="font-mono text-xs text-gray-400 mb-1">
             {MiniKit.user?.username ? `@${MiniKit.user.username}` : 'Anonymous'}
           </p>
-          <p className="text-sm text-gray-400">VLDX Balance</p>
+            <p className="text-sm text-gray-400">VLDX Balance</p>
           <p className="text-2xl font-bold text-white">{claimInfo ? Number.parseFloat(claimInfo.userBalance).toFixed(6) : "Loading..."}</p>
           <a
             href={claimInfo ? getUnoDeeplinkUrl({
