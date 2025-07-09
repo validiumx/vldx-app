@@ -36,7 +36,7 @@ export function UserProfile({ user, compact = false }: UserProfileProps) {
               )}
             </div>
             <p className="text-sm text-gray-600">
-              Nama pengguna anda digunakan untuk mengenal pasti anda dalam aplikasi ini. Pastikan maklumat anda sentiasa dikemas kini untuk pengalaman terbaik.
+              Your username is used to identify you in this application. Please keep your information up to date for the best experience.
             </p>
           </div>
         </div>

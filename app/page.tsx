@@ -59,10 +59,10 @@ export default function ValidiumXHomePage() {
     try {
       await navigator.clipboard.writeText(link)
       setCopied(true)
-      toast.success("Pautan disalin ke clipboard!")
+      toast.success("Link copied to clipboard!")
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
-      toast.error("Gagal salin pautan")
+      toast.error("Failed to copy link")
     }
   }
 
@@ -88,7 +88,7 @@ export default function ValidiumXHomePage() {
             disabled={isAuthLoading}
             className="mt-6 px-8 py-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg shadow-lg transition disabled:opacity-60"
           >
-            {isAuthLoading ? "Memproses..." : "Log Masuk dengan World ID"}
+            {isAuthLoading ? "Processing..." : "Login with World ID"}
           </button>
         </div>
       </div>
@@ -225,7 +225,7 @@ export default function ValidiumXHomePage() {
         </div>
 
         {/* Footer */}
-        {/* Padam footer VLDX Contract dan World Chain Mainnet */}
+        {/* Remove footer VLDX Contract and World Chain Mainnet */}
         {/*
         <div className="p-4 text-center text-gray-500 text-xs border-t border-gray-800 mt-8">
           <p>VLDX Contract: 0x6B44...8789</p>

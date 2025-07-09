@@ -1,11 +1,11 @@
 import { ethers } from "ethers"
 import { VLDX_CONTRACTS, WORLD_CHAIN_CONFIG } from "./config"
 
-// Address contract
+// Contract addresses
 export const VLDX_ADDRESS = "0x6B44699577d2EC9669802b3a4F8F91ecc4Aa8789"
 export const VLDX_CLAIM_ADDRESS = "0xfA087564057A805e47C379935DCd2889c903ec3a"
 
-// ABI penuh VLDX (ERC20 + custom)
+// Full VLDX ABI (ERC20 + custom)
 export const VLDX_ABI = [
   "function balanceOf(address owner) view returns (uint256)",
   "function transfer(address to, uint256 amount) returns (bool)",
@@ -17,7 +17,7 @@ export const VLDX_ABI = [
   "function decimals() view returns (uint8)",
 ]
 
-// ABI penuh VLDXClaim
+// Full VLDXClaim ABI
 export const VLDX_CLAIM_ABI = [
   "function claim() external",
   "function canClaim(address user) view returns (bool)",

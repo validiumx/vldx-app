@@ -37,8 +37,8 @@ export function WalletConnect() {
           <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
             <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"></div>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Menyediakan World App</h3>
-          <p className="text-gray-600 mb-4">Sila tunggu sebentar...</p>
+          <h3 className="text-lg font-semibold mb-2">Preparing World App</h3>
+          <p className="text-gray-600 mb-4">Please wait a moment...</p>
         </div>
       </WorldCard>
     )
@@ -51,8 +51,8 @@ export function WalletConnect() {
           <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
             <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"></div>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Menyambung ke World App</h3>
-          <p className="text-gray-600 mb-4">Sila tunggu sementara kami mewujudkan sambungan yang selamat...</p>
+          <h3 className="text-lg font-semibold mb-2">Connecting to World App</h3>
+          <p className="text-gray-600 mb-4">Please wait while we establish a secure connection...</p>
         </div>
       </WorldCard>
     )
@@ -69,8 +69,8 @@ export function WalletConnect() {
               </svg>
             </div>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Mengesahkan Identiti</h3>
-          <p className="text-gray-600 mb-4">Identiti anda sedang disahkan menggunakan World ID...</p>
+          <h3 className="text-lg font-semibold mb-2">Verifying Identity</h3>
+          <p className="text-gray-600 mb-4">Your identity is being verified using World ID...</p>
         </div>
       </WorldCard>
     )
@@ -85,25 +85,24 @@ export function WalletConnect() {
           </svg>
         </div>
 
-        <h3 className="text-lg font-semibold mb-2">Log Masuk dengan World ID</h3>
+        <h3 className="text-lg font-semibold mb-2">Log in with World ID</h3>
         <p className="text-gray-600 mb-6">
-          Sahkan identiti anda dengan selamat menggunakan World App. Tekan "Sambung World App" untuk memulakan
-          pengesahan.
+          Securely verify your identity using World App. Click "Connect World App" to begin verification.
         </p>
 
         <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
           <ul className="space-y-2 text-sm text-gray-700">
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
-              Identiti anda akan disahkan menggunakan World ID.
+              Your identity will be verified using World ID.
             </li>
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
-              Tiada kata laluan diperlukan.
+              No password required.
             </li>
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
-              Proses ini memastikan akaun anda selamat dan hanya boleh diakses oleh anda.
+              This process ensures your account is secure and can only be accessed by you.
             </li>
           </ul>
         </div>
@@ -115,11 +114,11 @@ export function WalletConnect() {
         )}
 
         <WorldButton onClick={handleConnect} loading={isLoading} haptic="medium" className="w-full">
-          {isLoading ? "Mengesahkan..." : "Sambung World App"}
+          {isLoading ? "Verifying..." : "Connect World App"}
         </WorldButton>
 
         <p className="text-xs text-gray-500 mt-4">
-          Dengan menyambung, anda bersetuju untuk mengesahkan identiti menggunakan protokol World ID.
+          By connecting, you agree to verify your identity using the World ID protocol.
         </p>
       </div>
     </WorldCard>

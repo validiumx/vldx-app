@@ -93,7 +93,7 @@ export class WalletAuthService {
       const siweMessage = new SiweMessage({
         domain: window.location.host,
         address: walletAddress,
-        statement: "Log masuk ke Validium-X Mini App",
+        statement: "Login to Validium-X Mini App",
         uri: window.location.origin,
         version: "1",
         chainId: 480, // World Chain

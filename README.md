@@ -3,11 +3,11 @@
 
 # Validium-X Official World Mini App
 
-> **NOTA PENTING:**
+> **IMPORTANT NOTE:**
 > 
-> Jika anda menggunakan mock MiniKit untuk development/testing,
-> **JANGAN deploy mock ini ke production!**
-> Pastikan kod mock MiniKit hanya aktif dalam environment development atau staging sahaja.
+> If you are using mock MiniKit for development/testing,
+> **DO NOT deploy this mock to production!**
+> Ensure mock MiniKit code is only active in development or staging environments.
 
 The official World Mini App for VLDX (Validium-X) token - The Backbone of Crypto, built with MiniKit and deployed on World Chain.
 

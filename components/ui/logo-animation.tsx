@@ -15,14 +15,14 @@ export default function LogoAnimation({
   isActive = false,
   isAnimated = true,
   logoSrc,
-  altText = "Logo Aplikasi",
+  altText = "App Logo",
   width = 150,
   height = 150,
   className = "",
   onClick,
 }: LogoAnimationProps) {
   if (!logoSrc) {
-    console.warn("LogoAnimation: Prop 'logoSrc' tidak disediakan.");
+    console.warn("LogoAnimation: Prop 'logoSrc' not provided.");
     return null;
   }
 
@@ -49,4 +49,4 @@ export default function LogoAnimation({
       </div>
     </div>
   );
-} 
+}

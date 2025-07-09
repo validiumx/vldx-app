@@ -10,7 +10,7 @@ import LogoAnimation from "@/components/ui/logo-animation"
 import { MiniKit } from "@worldcoin/minikit-js"
 import { useWorldId } from "@/hooks/use-world-id"
 
-// Helper untuk UNO Quick Action deeplink
+// Helper for UNO Quick Action deeplink
 const UNO_APP_ID = 'app_a4f7f3e62c1de0b9490a5260cb390b56'
 const VLDX_TOKEN = '0x6B44699577d2EC9669802b3a4F8F91ecc4Aa8789'
 const USDC_TOKEN = '0x79A02482A880bCE3F13e09Da970dC34db4CD24d1'
@@ -54,7 +54,7 @@ export function VLDXDailyClaim() {
     refreshClaimInfo,
   } = useVLDXClaim()
   const { isVerified } = useWorldId()
-  // Padam state balance & useEffect, guna claimInfo.userBalance sahaja
+  // Remove balance state & useEffect, use claimInfo.userBalance only
   const [claimError, setClaimError] = useState<string | null>(null)
   const [justClaimed, setJustClaimed] = useState(false)
   const [justClaimedTarget, setJustClaimedTarget] = useState<Date | null>(null)
@@ -67,7 +67,7 @@ export function VLDXDailyClaim() {
     if (!result.success) {
       setClaimError(result.error || "Claim failed")
       } else {
-      // Terus tunjuk countdown 24 jam dan mesej selepas claim
+      // Immediately show 24-hour countdown and message after claim
       const target = new Date(Date.now() + 24 * 60 * 60 * 1000)
       setJustClaimed(true)
       setJustClaimedTarget(target)
@@ -112,11 +112,11 @@ export function VLDXDailyClaim() {
               {(() => {
                 let targetDate: Date | null = null
                 if (claimInfo && claimInfo.lastClaimTime) {
-                  // lastClaimTime dalam epoch detik, cooldown 24 jam (86400s)
+                  // lastClaimTime in epoch seconds, cooldown 24 hours (86400s)
                   const nextClaimEpoch = claimInfo.lastClaimTime + 86400
                   targetDate = new Date(nextClaimEpoch * 1000)
                 } else if (countdown && countdown !== "00:00:00") {
-                  // Parse countdown string "HH:MM:SS" ke Date
+                  // Parse countdown string "HH:MM:SS" to Date
                   const [h, m, s] = countdown.split(":").map(Number)
                   const now = new Date()
                   targetDate = new Date(now.getTime() + ((h * 3600 + m * 60 + s) * 1000))
