@@ -1,196 +1,82 @@
-# vldx-app
-  Validium-X (VLDX) Mini App for World App. Claim, swap, and invite friends to earn VLDX tokens. Built for WorldChain.
+vldx-app
+Validium-X (VLDX) Official World Mini App — claim, swap, and invite friends to earn VLDX tokens directly within World App.
 
-# Validium-X Official World Mini App
+🌟 Overview
+VLDX Mini App lets World App users easily claim daily rewards, swap VLDX tokens, and invite friends to earn bonuses. Built natively for World Chain using MiniKit and fully integrated with official smart contracts.
 
-> **IMPORTANT NOTE:**
-> 
-> If you are using mock MiniKit for development/testing,
-> **DO NOT deploy this mock to production!**
-> Ensure mock MiniKit code is only active in development or staging environments.
+✨ Key Features
+Daily VLDX token claims
 
-The official World Mini App for VLDX (Validium-X) token - The Backbone of Crypto, built with MiniKit and deployed on World Chain.
+Invite friends and earn referral rewards
 
-## 🚀 Features
+Secure wallet authentication (SIWE)
 
-- **MiniKit Integration**: Full integration with World App MiniKit
-- **Wallet Authentication**: SIWE (Sign-In with Ethereum) authentication
-- **World ID Verification**: Secure identity verification for VLDX claims
-- **Daily VLDX Claims**: Users can claim VLDX tokens daily
-- **Referral System**: Earn 50 VLDX for each friend you invite
-- **Real Contract Integration**: Connected to official VLDX contracts on World Chain
-- **Payment Integration**: Support for VLDX payments through World App
+World ID verification for claims
 
-## 📦 VLDX Contract Addresses (World Chain Mainnet)
+Swap and pay directly in World App
 
-- **VLDX Token**: `0x6B44699577d2EC9669802b3a4F8F91ecc4Aa8789`
-- **VLDX Liquidity**: `0xaBF584aA0E3a7943Fb82692B8A06CD8CccEaE019`
-- **VLDX Swapper**: `0xD1a55b27F13f06788A3C8378ee7EA4965133125C`
-- **VLDX Claim**: `0xfA087564057A805e47C379935DCd2889c903ec3a`
+🚀 Getting Started
+Prerequisites
+Node.js 18+
 
-**Deployer**: `0x701aB55cb87FB8dA4fE3f45FFf6cc1eA60965310`  
-**Status**: Verified ✅ on WorldScan
+World App installed on your device
 
-## 🛠 Tech Stack
+World Developer Portal account
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **World Integration**: MiniKit JS/React, World ID
-- **Blockchain**: World Chain (Chain ID: 480)
-- **Styling**: Tailwind CSS
-- **Authentication**: SIWE, World ID
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- World App installed on mobile device
-- World Developer Portal account
-
-### Installation
-
-1. Clone the repository:
-\`\`\`bash
+Installation
+bash
+Copy
+Edit
 git clone <repository-url>
 cd validium-x-world-mini-app
-\`\`\`
-
-2. Install dependencies:
-\`\`\`bash
 npm install
 # or
 pnpm install
-\`\`\`
+Setup
+Copy the example environment file:
 
-3. Set up environment variables:
-\`\`\`bash
+bash
+Copy
+Edit
 cp .env.example .env.local
-\`\`\`
+Update it with your World App credentials:
 
-Add your World App credentials:
-\`\`\`env
+ini
+Copy
+Edit
 NEXT_PUBLIC_WORLD_APP_ID=your_app_id
 NEXT_PUBLIC_WORLD_ACTION_ID=claim-daily-vldx
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
-\`\`\`
+Start the development server:
 
-4. Run the development server:
-\`\`\`bash
+bash
+Copy
+Edit
 npm run dev
 # or
 pnpm dev
-\`\`\`
+Open http://localhost:3000 inside World App.
 
-5. Open [http://localhost:3000](http://localhost:3000) in World App
+🚢 Deployment
+Recommended: Vercel
+Connect your GitHub repository to Vercel
 
-## 📁 Project Structure
+Add environment variables via the Vercel dashboard
 
-\`\`\`
-├── app/
-│   ├── api/                    # API routes
-│   │   ├── claim-daily-vldx/   # VLDX daily claim endpoint
-│   │   ├── verify-world-id/    # World ID verification
-│   │   └── complete-siwe/      # SIWE authentication
-│   ├── globals.css             # Global styles
-│   ├── layout.tsx              # Root layout
-│   └── page.tsx                # Home page
-├── components/
-│   ├── auth/                   # Authentication components
-│   ├── claim/                  # VLDX claim components
-│   ├── providers/              # Context providers
-│   ├── referral/               # VLDX referral system
-│   ├── ui/                     # UI components
-│   └── verification/           # World ID verification
-├── hooks/                      # Custom React hooks
-│   ├── use-vldx.ts            # VLDX contract interactions
-│   └── use-world-id.ts        # World ID verification
-├── lib/                        # Utility functions
-│   ├── vldx-contracts.ts      # VLDX contract service
-│   └── config.ts              # App configuration
-└── public/                     # Static assets
-    └── images/
-        └── VLDX_logo.png      # Official VLDX logo
-\`\`\`
+Deploy automatically on each push
 
-## 🔗 Key Components
-
-### VLDX Contract Integration
-- Real-time balance checking
-- Daily claim verification
-- Contract interaction through ethers.js
-- World Chain RPC integration
-
-### Authentication Flow
-1. Check MiniKit installation
-2. Connect wallet via SIWE
-3. Verify World ID for VLDX access
-4. Access daily claims and referral features
-
-### API Endpoints
-- `/api/claim-daily-vldx` - Process daily VLDX claims
-- `/api/verify-world-id` - Verify World ID proof
-- `/api/complete-siwe` - Complete SIWE authentication
-
-## 🌍 World App Integration
-
-### MiniKit Commands Used
-- `walletAuth` - Wallet authentication
-- `verify` - World ID verification (action: claim-daily-vldx)
-- `pay` - VLDX payment processing
-- `signMessage` - Message signing
-- `sendHapticFeedback` - Haptic feedback
-- `share` - Content sharing
-
-## 🔒 Security Features
-
-- World ID verification required for claims
-- SIWE message verification on backend
-- Rate limiting on API endpoints
-- Input validation and sanitization
-- Secure contract interactions
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on push
-
-### Manual Deployment
-\`\`\`bash
+Manual
+bash
+Copy
+Edit
 npm run build
 npm start
-\`\`\`
+📄 License
+Proprietary — Validium-X Team. All rights reserved.
 
-## 📊 Contract Information
+💬 Support
+Refer to World Developer Documentation
 
-The VLDX ecosystem contracts are deployed and verified on World Chain Mainnet:
+Contact the Validium-X development team
 
-- **Deploy Script**: `scripts/deploy_mainnet_strict.js`
-- **Verify Script**: `scripts/verify_mainnet_strict.js`
-- **Gas Price**: ~0.001001437 gwei
-- **Verification Status**: ✅ Verified on WorldScan
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly with World App
-5. Submit a pull request
-
-## 📄 License
-
-This project is proprietary and confidential to the Validium-X team.
-
-## 🆘 Support
-
-For issues or questions:
-- Check World Developer Documentation
-- Contact the Validium-X development team
-- Submit issues via GitHub
-
----
-
-**Validium-X - The Backbone of Crypto**  
-*Powered by World Chain • Built with MiniKit*
+Open an issue on GitHub
