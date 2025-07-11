@@ -9,6 +9,13 @@ export class MiniKitDetector {
     userAgent?: string
   }> {
     const userAgent = typeof window !== "undefined" ? window.navigator.userAgent : ""
+    // Debug log for userAgent
+    if (typeof window !== "undefined") {
+      // @ts-ignore
+      console.log("[MiniKitDetector] userAgent:", window.navigator.userAgent)
+      // @ts-ignore
+      console.log("[MiniKitDetector] window.miniKit:", window.miniKit)
+    }
     const isWorldApp = this.isWorldAppEnvironment(userAgent)
     const miniKitAvailable = await this.detectWithRetry()
     return {
