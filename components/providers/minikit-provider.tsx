@@ -4,6 +4,7 @@ import React from "react"
 import type { ReactNode } from "react"
 import { useEffect, useState } from "react"
 import { MiniKitDetector } from "@/lib/minikit-detector"
+import { MiniKit } from "@worldcoin/minikit-js"
 
 interface MiniKitContextType {
   isAvailable: boolean
@@ -25,6 +26,19 @@ export function MiniKitProvider({ children }: { children: ReactNode }) {
   })
 
   useEffect(() => {
+    // Install MiniKit as per Worldcoin docs
+    const appId = process.env.NEXT_PUBLIC_WORLD_APP_ID || ""
+    if (typeof window !== "undefined" && appId) {
+      try {
+        MiniKit.install(appId)
+        // Debug log
+        // @ts-ignore
+        console.log("[MiniKitProvider] Called MiniKit.install with appId:", appId)
+      } catch (e) {
+        // @ts-ignore
+        console.error("[MiniKitProvider] MiniKit.install error:", e)
+      }
+    }
     detectEnvironment()
   }, [])
 
