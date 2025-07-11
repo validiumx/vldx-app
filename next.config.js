@@ -10,6 +10,8 @@ const nextConfig = {
     domains: ["blob.v0.dev", "api.dicebear.com"],
     unoptimized: true,
   },
+  // No absolute Windows path should be used anywhere in this config
+  // All imports in your app (fonts, css, etc) must use relative paths
   async headers() {
     return [
       {
@@ -29,8 +31,8 @@ const nextConfig = {
           },
         ],
       },
-    ]
+    ];
   },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

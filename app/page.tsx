@@ -1,237 +1,186 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { WalletConnect } from "@/components/auth/wallet-connect"
-import { UserProfile } from "@/components/auth/user-profile"
-import { WorldIdVerify } from "@/components/verification/world-id-verify"
-import { VLDXDailyClaim } from "@/components/claim/vldx-daily-claim"
-import { VLDXReferralSystem } from "@/components/referral/vldx-referral-system"
-import { useAuth } from "@/hooks/use-auth"
-import { useMiniKit } from "@/hooks/use-minikit"
-import { ethers } from "ethers"
-import { toast } from "sonner"
-import { VLDX_CONTRACTS } from "@/lib/config"
-import { VLDX_ABI } from "@/lib/vldx-contracts"
-import LogoAnimation from "@/components/ui/logo-animation"
-import HomeSlider from "@/components/ui/home-slider"
+import { AuthService, type AuthUser, type AuthResponse } from "@/lib/auth-service"
+import { LoginButton } from "@/components/auth/login-button"
+import { MiniKit } from "@worldcoin/minikit-js"
 
-function useVldxBalance(address?: string | null) {
-  const [balance, setBalance] = useState<string | null>(null)
+export default function HomePage() {
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
   useEffect(() => {
-    if (!address) return
-    async function fetchBalance() {
-      try {
-        const provider = new ethers.JsonRpcProvider("https://worldchain-mainnet.g.alchemy.com/public")
-        const contract = new ethers.Contract(VLDX_CONTRACTS.VLDX, VLDX_ABI, provider)
-        const bal = await contract.balanceOf(address)
-        const dec = await contract.decimals()
-        setBalance(ethers.formatUnits(bal, dec))
-      } catch (err) {
-        setBalance(null)
-        console.error("Failed to fetch VLDX balance", err)
-      }
-    }
-    fetchBalance()
-  }, [address])
-  return balance
-}
+    checkInitialAuth()
+  }, [])
 
-export default function ValidiumXHomePage() {
-  const { user, isAuthenticated, login, isLoading: isAuthLoading } = useAuth()
-  const { isInstalled, isLoading } = useMiniKit()
-  const [activeTab, setActiveTab] = useState<"home" | "referral" | "about">("home")
-  const [copied, setCopied] = useState(false)
-
-  // Dapatkan VLDX balance sebenar dari contract
-  const vldxBalance = useVldxBalance(user?.walletAddress)
-
-  // Generate referral link (same as VLDXReferralSystem)
-  const generateReferralLink = () => {
-    if (!user) return ""
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
-    return `${baseUrl}?ref=${user.referralCode}&wid=${user.id}`
-  }
-
-  // Handler for slider click
-  const handleSliderClick = async () => {
-    if (!user) return
-    const link = generateReferralLink()
+  const checkInitialAuth = async () => {
     try {
-      await navigator.clipboard.writeText(link)
-      setCopied(true)
-      toast.success("Link copied to clipboard!")
-      setTimeout(() => setCopied(false), 2000)
+      setIsLoading(true)
+      setError(null)
+
+      // Check if MiniKit is available
+      // Use checkMiniKitSupport() for more robust World App detection
+      const { checkMiniKitSupport } = await import("@/lib/minikit")
+      const isSupported = await checkMiniKitSupport()
+      if (!isSupported || !MiniKit.isInstalled()) {
+        setError("This app only works in World App. Please open it through World App.")
+        return
+      }
+
+      // Check existing authentication
+      const authStatus = await AuthService.checkAuthStatus()
+
+      if (authStatus.success && authStatus.user) {
+        setUser(authStatus.user)
+        console.log("User already authenticated:", authStatus.user.walletAddress)
+      }
     } catch (error) {
-      toast.error("Failed to copy link")
+      console.error("Initial auth check failed:", error)
+      setError("Failed to check authentication status")
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  // Splash screen: show if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
-        <div className="flex flex-col items-center justify-center">
-          <div className="mb-8">
-            <LogoAnimation
-              logoSrc="/images/base_logo.png"
-              altText="Validium-X Logo"
-              width={160}
-              height={160}
-              className="mx-auto"
-            />
-          </div>
-          <div className="mb-2 text-2xl font-bold text-center">The Backbone of Crypto</div>
-          <div className="mb-8 text-gray-400 text-center">Powered by Validium-X</div>
-          {/* WorldIdVerify prompt dipadam terus */}
-          <button
-            onClick={login}
-            disabled={isAuthLoading}
-            className="mt-6 px-8 py-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg shadow-lg transition disabled:opacity-60"
-          >
-            {isAuthLoading ? "Processing..." : "Login with World ID"}
-          </button>
-        </div>
-      </div>
-    )
+  const handleLoginSuccess = (response: AuthResponse) => {
+    if (response.user) {
+      setUser(response.user)
+      setError(null)
+      console.log("Login successful for:", response.user.walletAddress)
+    }
   }
 
+  const handleLoginError = (errorMessage: string) => {
+    setError(errorMessage)
+    setUser(null)
+    console.error("Login failed:", errorMessage)
+  }
+
+  const handleLogout = async () => {
+    try {
+      const success = await AuthService.logout()
+      if (success) {
+        setUser(null)
+        setError(null)
+        console.log("Logout successful")
+      }
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
+  }
+
+  // Loading screen
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Loading Validium-X...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white">Loading Validium-X...</p>
         </div>
       </div>
     )
   }
 
-  if (!isInstalled || !isAuthenticated) {
+  // Error screen
+  if (error && !user) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <WalletConnect />
+        <div className="max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-2xl">!</span>
+          </div>
+          <h1 className="text-xl font-bold text-white mb-4">Authentication Error</h1>
+          <p className="text-gray-300 mb-6">{error}</p>
+          <button onClick={checkInitialAuth} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }
 
+  // Login screen
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl font-bold text-white">V</span>
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Validium-X</h1>
+            <p className="text-gray-400">Official World App Mini App</p>
+          </div>
+
+          {/* Login Form */}
+          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <h2 className="text-lg font-semibold text-white mb-4">Welcome</h2>
+            <p className="text-gray-300 text-sm mb-6">Sign in with your wallet to start claiming VLDX tokens daily.</p>
+
+            <LoginButton onLoginSuccess={handleLoginSuccess} onLoginError={handleLoginError} />
+
+            {error && (
+              <div className="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-lg">
+                <p className="text-red-300 text-sm">{error}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Main app screen
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto p-4">
         {/* Header */}
-        {/* <div className="p-4 text-center border-b border-gray-800">
-          <h1 className="text-2xl font-bold">Validium-X</h1>
-          <p className="text-gray-400 text-sm">The Backbone of Crypto</p>
-        </div> */}
-
-        {/* User Profile */}
-        {user && (
-          <div className="p-4 flex flex-col items-center">
-            {/* <UserProfile user={user} compact /> */}
-            {/* Kad welcome dipadam atas permintaan user */}
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl font-bold">V</span>
           </div>
-        )}
-
-        {/* Tab Navigation */}
-        {/* Padam/komen WorldIdVerify di sini */}
-        {/* {!user?.worldIdVerified && (
-          <WorldIdVerify
-            action="claim-daily-vldx"
-            onSuccess={() => {
-              window.location.reload()
-            }}
-          />
-        )} */}
-        <div className="flex bg-gray-900 m-4 rounded-full p-1">
-          <button
-            onClick={() => setActiveTab("home")}
-            className={`flex-1 py-3 px-4 rounded-full text-sm font-medium transition-colors ${
-              activeTab === "home" ? "bg-white text-black" : "text-gray-400 hover:text-white"
-            }`}
-          >
-            Home
-          </button>
-          <button
-            onClick={() => setActiveTab("about")}
-            className={`flex-1 py-3 px-4 rounded-full text-sm font-medium transition-colors ${
-              activeTab === "about" ? "bg-white text-black" : "text-gray-400 hover:text-white"
-            }`}
-          >
-            About
-          </button>
+          <h1 className="text-xl font-bold mb-2">Validium-X</h1>
+          <p className="text-gray-400 text-sm">Welcome back!</p>
         </div>
 
-        {/* Content */}
-        <div className="p-4 space-y-6">
-          {activeTab === "home" && (
-            <>
-              <VLDXDailyClaim />
-              <HomeSlider />
-            </>
-          )}
-
-          {activeTab === "about" && (
-            <div className="flex flex-col flex-grow items-center justify-center text-center min-h-[60vh]">
-              <h2 className="text-2xl font-bold mb-4">About Validium-X</h2>
-              <p className="max-w-xl text-gray-300 mb-8">
-                Validium-X is a blockchain technology built on WorldChain, designed to be the backbone of secure, fast, and decentralized digital finance. With a focus on integrity, high performance, and security, Validium-X powers a stronger, more reliable digital economy, paving the way for limitless innovation.
-              </p>
-              <div className="flex flex-col items-center">
-                <div className="mb-6">
-                  <LogoAnimation
-                    logoSrc="/images/base_logo.png"
-                    altText="Validium-X Logo"
-                    width={128}
-                    height={128}
-                    className="mx-auto"
-                  />
+        {/* User Info */}
+        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {user.profilePictureUrl ? (
+                <img
+                  src={user.profilePictureUrl || "/placeholder.svg"}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-sm font-bold">{user.username?.charAt(0).toUpperCase() || "U"}</span>
                 </div>
-                <div className="mb-2 text-lg font-semibold">The Backbone of Crypto</div>
-                <div className="mb-8 text-gray-400 text-sm">Powered by Validium-X</div>
-                <div className="flex gap-4 justify-center">
-                  <a
-                    href="https://x.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
-                  >
-                    <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M17.53 6.477h3.181l-6.953 7.965 6.953 8.081h-5.463l-4.312-5.01-4.924 5.01H2.5l7.37-7.497L2.5 6.477h5.635l3.98 4.62 4.415-4.62zm-1.04 14.04h2.19l-5.98-6.96-6.01 6.96h2.19l3.82-3.89 3.79 3.89z" />
-                    </svg>
-                  </a>
-                  <a
-                    href="https://t.me/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
-                  >
-                    <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M9.036 16.572l-.396 5.59c.567 0 .813-.244 1.11-.537l2.664-2.53 5.522 4.04c1.012.557 1.73.264 1.98-.937l3.594-16.84c.327-1.51-.547-2.1-1.53-1.74L2.36 9.27c-1.48.58-1.46 1.41-.252 1.78l4.59 1.433 10.65-6.7c.5-.32.96-.14.58.2" />
-                    </svg>
-                  </a>
-                  <a
-                    href="https://github.com/validiumx/vldx-app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 transition-colors"
-                  >
-                    <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.186 6.839 9.504.5.092.682-.217.682-.483 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.004.07 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.339-2.221-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.295 2.748-1.025 2.748-1.025.546 1.378.202 2.397.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.847-2.337 4.695-4.566 4.944.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.744 0 .268.18.579.688.481C19.138 20.204 22 16.447 22 12.021 22 6.484 17.523 2 12 2z" />
-                    </svg>
-                  </a>
-                </div>
+              )}
+              <div>
+                <p className="font-medium">{user.username || "Anonymous"}</p>
+                <p className="text-sm text-gray-400">
+                  {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
+                </p>
               </div>
             </div>
-          )}
+            <button
+              onClick={handleLogout}
+              className="text-gray-400 hover:text-white text-sm px-3 py-1 rounded border border-gray-600 hover:border-gray-500"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
-        {/* Footer */}
-        {/* Remove footer VLDX Contract and World Chain Mainnet */}
-        {/*
-        <div className="p-4 text-center text-gray-500 text-xs border-t border-gray-800 mt-8">
-          <p>VLDX Contract: 0x6B44...8789</p>
-          <p>World Chain Mainnet</p>
+        {/* Success Message */}
+        <div className="bg-green-900/50 border border-green-700 rounded-lg p-4 text-center">
+          <h2 className="text-green-300 font-semibold mb-2">Authentication Successful!</h2>
+          <p className="text-green-200 text-sm">You are now logged in and can access all features of Validium-X.</p>
         </div>
-        */}
       </div>
     </div>
   )

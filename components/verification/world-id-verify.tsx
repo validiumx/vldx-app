@@ -11,6 +11,19 @@ interface WorldIdVerifyProps {
   onError?: (error: Error) => void
 }
 
+export type User = {
+  walletAddress?: string
+  username?: string
+  profilePictureUrl?: string
+  permissions?: {
+    notifications: boolean
+    contacts: boolean
+  }
+  optedIntoOptionalAnalytics?: boolean
+  worldAppVersion?: number
+  deviceOS?: string
+}
+
 export function WorldIdVerify({ action = "claim-daily-vldx", onSuccess, onError }: WorldIdVerifyProps) {
   const { isVerifying, isVerified, verify } = useWorldId()
   const [error, setError] = useState<string | null>(null)

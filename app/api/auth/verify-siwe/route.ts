@@ -1,91 +1,134 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { SiweMessage } from "siwe"
-import type { User } from "@/lib/types"
 import { cookies } from "next/headers"
+import { verifySiweMessage, type MiniAppWalletAuthSuccessPayload } from "@worldcoin/minikit-js"
+import crypto from "crypto"
+
+interface VerifyRequest {
+  payload: MiniAppWalletAuthSuccessPayload
+  nonce: string
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, signature, nonce, walletAddress } = await request.json()
+    console.log("Starting SIWE verification...")
 
-    // Bypass SIWE verification in dev if signature is mock
-    if (process.env.NODE_ENV !== "production" && signature === "0xMOCK") {
-      return NextResponse.json({
-        success: true,
-        user: {
-          id: "user_mock",
-          walletAddress,
-          username: "MockUser",
-          profilePictureUrl: `https://api.dicebear.com/7.x/identicon/svg?seed=${walletAddress}`,
-          permissions: { notifications: true, contacts: false },
-          optedIntoOptionalAnalytics: false,
-          worldIdVerified: false,
-          vldxBalance: 100,
-          referralCode: "MOCKREF",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+    const { payload, nonce }: VerifyRequest = await request.json()
+
+    // Validate request data
+    if (!payload || !nonce) {
+      return NextResponse.json(
+        {
+          success: false,
+          isValid: false,
+          message: "Missing payload or nonce",
         },
-      })
+        { status: 400 },
+      )
     }
 
-    // Check nonce from cookie/session
-    const sessionNonce = cookies().get('siwe_nonce')?.value
-    if (!sessionNonce || nonce !== sessionNonce) {
-      return NextResponse.json({ success: false, error: "Nonce mismatch" }, { status: 400 })
+    // Get stored nonce from cookie
+    const cookieStore = await cookies()
+    const storedNonce = cookieStore.get("auth_nonce")?.value
+    const nonceTimestamp = cookieStore.get("nonce_timestamp")?.value
+
+    // Validate nonce
+    if (!storedNonce || storedNonce !== nonce) {
+      console.error("Nonce validation failed")
+      return NextResponse.json(
+        {
+          success: false,
+          isValid: false,
+          message: "Invalid or expired nonce",
+        },
+        { status: 401 },
+      )
+    }
+
+    // Check nonce age (max 5 minutes)
+    if (nonceTimestamp) {
+      const age = Date.now() - Number.parseInt(nonceTimestamp)
+      if (age > 300000) {
+        // 5 minutes
+        console.error("Nonce expired")
+        return NextResponse.json(
+          {
+            success: false,
+            isValid: false,
+            message: "Nonce has expired",
+          },
+          { status: 401 },
+        )
+      }
     }
 
     // Verify SIWE message
-    const siweMessage = new SiweMessage(message)
-    const fields = await siweMessage.verify({ signature, nonce })
+    console.log("Verifying SIWE message for address:", payload.address)
+    const verificationResult = await verifySiweMessage(payload, nonce)
 
-    if (!fields.success) {
-      return NextResponse.json({ success: false, error: "Invalid signature" }, { status: 400 })
+    if (!verificationResult.isValid) {
+      console.error("SIWE verification failed")
+      return NextResponse.json(
+        {
+          success: false,
+          isValid: false,
+          message: "SIWE signature verification failed",
+        },
+        { status: 401 },
+      )
     }
 
-    // Verify wallet address matches
-    if (fields.data.address.toLowerCase() !== walletAddress.toLowerCase()) {
-      return NextResponse.json({ success: false, error: "Wallet address mismatch" }, { status: 400 })
-    }
+    // Generate session token
+    const sessionToken = crypto.randomBytes(32).toString("hex")
+    const sessionExpiry = Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
 
-    // Create or update user in database
-    const user: User = await createOrUpdateUser(walletAddress)
+    // Store session in secure cookie
+    cookieStore.set("session_token", sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: "/",
+    })
+
+    cookieStore.set("session_address", payload.address, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: "/",
+    })
+
+    cookieStore.set("session_expiry", sessionExpiry.toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: "/",
+    })
+
+    // Clear used nonce
+    cookieStore.delete("auth_nonce")
+    cookieStore.delete("nonce_timestamp")
+
+    console.log("SIWE verification successful for:", payload.address)
 
     return NextResponse.json({
       success: true,
-      user,
+      isValid: true,
+      sessionToken,
+      address: payload.address,
+      expiresAt: sessionExpiry,
     })
   } catch (error) {
     console.error("SIWE verification error:", error)
-    return NextResponse.json({ success: false, error: "Authentication failed" }, { status: 500 })
+
+    return NextResponse.json(
+      {
+        success: false,
+        isValid: false,
+        message: error instanceof Error ? error.message : "Verification failed",
+      },
+      { status: 500 },
+    )
   }
-}
-
-async function createOrUpdateUser(walletAddress: string): Promise<User> {
-  // In a real app, this would interact with your database
-  // For demo purposes, we'll create a mock user
-
-  const user: User = {
-    id: `user_${walletAddress.toLowerCase()}`,
-    walletAddress: walletAddress.toLowerCase(),
-    username: `User${walletAddress.slice(-4)}`,
-    profilePictureUrl: `https://api.dicebear.com/7.x/identicon/svg?seed=${walletAddress}`,
-    permissions: {
-      notifications: true,
-      contacts: false,
-    },
-    optedIntoOptionalAnalytics: false,
-    worldIdVerified: false,
-    vldxBalance: 50.0,
-    referralCode: generateReferralCode(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-
-  // TODO: Save to database
-  // await db.users.upsert({ where: { walletAddress }, create: user, update: user })
-
-  return user
-}
-
-function generateReferralCode(): string {
-  return "VLDX" + Math.random().toString(36).substring(2, 8).toUpperCase()
 }

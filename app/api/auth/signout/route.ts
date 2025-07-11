@@ -1,21 +1,32 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { cookies } from "next/headers"
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization")
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ success: false, error: "No token provided" }, { status: 401 })
-    }
+    const cookieStore = await cookies()
 
-    // In a real app, you might want to blacklist the token
-    // or remove it from a session store
+    // Clear all session cookies
+    cookieStore.delete("session_token")
+    cookieStore.delete("session_address")
+    cookieStore.delete("session_expiry")
+    cookieStore.delete("auth_nonce")
+    cookieStore.delete("nonce_timestamp")
+
+    console.log("User logged out successfully")
 
     return NextResponse.json({
       success: true,
-      message: "Signed out successfully",
+      message: "Logged out successfully",
     })
   } catch (error) {
-    console.error("Sign out error:", error)
-    return NextResponse.json({ success: false, error: "Sign out failed" }, { status: 500 })
+    console.error("Logout error:", error)
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Logout failed",
+      },
+      { status: 500 },
+    )
   }
 }

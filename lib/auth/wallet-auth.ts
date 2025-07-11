@@ -63,20 +63,22 @@ export class WalletAuthService {
    * Initiate wallet authentication using SIWE
    */
   static async initiateWalletAuth(): Promise<SiwePayload> {
-    const MiniKit = (typeof window !== "undefined" && (window as any).MiniKit) ? (window as any).MiniKit : null;
-    if (!MiniKit || !MiniKit.isInstalled()) {
+    // Only allow in World App (MiniKit)
+    if (typeof window === "undefined" || !MiniKit.isInstalled()) {
       alert("MiniKit is only available in the World App. Please open this application via the World App.");
-      throw new Error("MiniKit not installed");
+      throw new Error("MiniKit not installed or not in World App");
     }
 
-    // Get wallet address from MiniKit.getUser() if available
-    let walletAddress = "";
-    if (typeof MiniKit.getUser === "function") {
-      const user = await MiniKit.getUser();
-      walletAddress = user?.walletAddress || "";
-    } else if (MiniKit.walletAddress) {
-      walletAddress = MiniKit.walletAddress;
+    // Strict domain & origin check (Worldcoin Developer Dashboard values)
+    const expectedDomain = "vldx-app.vercel.app";
+    const expectedOrigin = "https://vldx-app.vercel.app";
+    if (window.location.host !== expectedDomain || window.location.origin !== expectedOrigin) {
+      alert("Domain or redirect URI mismatch. Please access this app from the correct World App link.");
+      throw new Error("Domain or redirect URI does not match Worldcoin Developer Dashboard settings.");
     }
+
+    // Get wallet address from MiniKit.user (v1.2 best practice)
+    const walletAddress = MiniKit.user?.walletAddress || null;
     if (!walletAddress) {
       throw new Error("No wallet address available");
     }
@@ -89,12 +91,12 @@ export class WalletAuthService {
       }
       const { nonce } = await nonceResponse.json();
 
-      // Create SIWE message
+      // Create SIWE message (English, best practice)
       const siweMessage = new SiweMessage({
-        domain: window.location.host,
+        domain: expectedDomain,
         address: walletAddress,
         statement: "Login to Validium-X Mini App",
-        uri: window.location.origin,
+        uri: expectedOrigin,
         version: "1",
         chainId: 480, // World Chain
         nonce,
@@ -102,21 +104,22 @@ export class WalletAuthService {
       });
       const message = siweMessage.prepareMessage();
 
-      // Use MiniKit wallet auth command
+      // Use MiniKit v1.2 walletAuth (best practice)
       const result = await MiniKit.commandsAsync.walletAuth({
         nonce,
-        statement: "Log masuk ke Validium-X Mini App",
+        statement: "Login to Validium-X Mini App",
         expirationTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       });
-      // result may be { signature, walletAddress } or error
-      if (!result || !result.signature || !result.walletAddress) {
+      // result: { commandPayload, finalPayload }
+      const payload = result?.finalPayload;
+      if (!payload || payload.status !== 'success' || !payload.signature || !payload.address || !payload.message) {
         throw new Error("Wallet authentication failed");
       }
       return {
-        message,
-        signature: result.signature,
+        message: payload.message,
+        signature: payload.signature,
         nonce,
-        walletAddress: result.walletAddress,
+        walletAddress: payload.address,
       };
     } catch (error) {
       console.error("Wallet auth initiation error:", error);
