@@ -1,4 +1,4 @@
-import { MiniKit } from "@worldcoin/minikit-js"
+import { MiniKitDetector } from "./minikit-detector"
 
 export interface AuthUser {
   walletAddress: string
@@ -20,18 +20,38 @@ export class AuthService {
   private static readonly SESSION_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
 
   /**
+   * Get MiniKit instance (real or mock)
+   */
+  private static getMiniKit() {
+    if (typeof window !== "undefined" && (window as any).MiniKit) {
+      return (window as any).MiniKit
+    }
+
+    // Fallback to imported MiniKit
+    try {
+      const { MiniKit } = require("@worldcoin/minikit-js")
+      return MiniKit
+    } catch (error) {
+      console.warn("MiniKit not available, using mock")
+      return MiniKitDetector.getMockMiniKit()
+    }
+  }
+
+  /**
    * Main wallet authentication method using SIWE
    */
   static async authenticateWithWallet(): Promise<AuthResponse> {
     try {
       console.log("Starting wallet authentication...")
 
-      // Step 1: Check MiniKit availability
-      if (!MiniKit.isInstalled()) {
-        throw new Error("MiniKit is not available. Please open this app in World App.")
+      const MiniKit = this.getMiniKit()
+
+      // Check MiniKit availability
+      if (!MiniKit || !MiniKit.isInstalled()) {
+        throw new Error("MiniKit is not available")
       }
 
-      // Step 2: Get nonce from backend
+      // Step 1: Get nonce from backend
       console.log("Fetching nonce from backend...")
       const nonceResponse = await fetch("/api/auth/nonce", {
         method: "GET",
@@ -52,7 +72,7 @@ export class AuthService {
 
       console.log("Nonce received:", nonce.substring(0, 8) + "...")
 
-      // Step 3: Perform wallet authentication
+      // Step 2: Perform wallet authentication
       console.log("Initiating wallet authentication...")
       const authResult = await MiniKit.commandsAsync.walletAuth({
         nonce,
@@ -60,14 +80,14 @@ export class AuthService {
         expirationTime: new Date(Date.now() + this.SESSION_DURATION),
         notBefore: new Date(Date.now() - 60000), // 1 minute ago
         statement: "Sign in to Validium-X Mini App to access your account and claim VLDX tokens.",
-        uri: window.location.origin,
+        uri: typeof window !== "undefined" ? window.location.origin : "https://vldx-app.vercel.app",
         version: "1",
         chainId: 1, // Ethereum mainnet
       })
 
       console.log("Wallet auth result:", authResult.finalPayload.status)
 
-      // Step 4: Check authentication result
+      // Step 3: Check authentication result
       if (authResult.finalPayload.status === "error") {
         throw new Error(authResult.finalPayload.errorMessage || "Wallet authentication failed")
       }
@@ -76,7 +96,7 @@ export class AuthService {
         throw new Error("Wallet authentication was not successful")
       }
 
-      // Step 5: Verify SIWE signature on backend
+      // Step 4: Verify SIWE signature on backend
       console.log("Verifying SIWE signature...")
       const verifyResponse = await fetch("/api/auth/verify", {
         method: "POST",
@@ -99,7 +119,7 @@ export class AuthService {
         throw new Error(verifyResult.message || "SIWE signature verification failed")
       }
 
-      // Step 6: Create user session
+      // Step 5: Create user session
       const user: AuthUser = {
         walletAddress: authResult.finalPayload.address,
         username: MiniKit.user?.username,
@@ -108,7 +128,7 @@ export class AuthService {
         sessionToken: verifyResult.sessionToken,
       }
 
-      // Step 7: Store session locally
+      // Step 6: Store session locally
       this.storeSession(user)
 
       console.log("Authentication successful for:", user.walletAddress)

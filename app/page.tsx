@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react"
 import { AuthService, type AuthUser, type AuthResponse } from "@/lib/auth-service"
 import { LoginButton } from "@/components/auth/login-button"
-import { MiniKit } from "@worldcoin/minikit-js"
+import { useMiniKit } from "@/components/providers/minikit-provider"
 
 export default function HomePage() {
+  const { environment } = useMiniKit()
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -18,15 +19,6 @@ export default function HomePage() {
     try {
       setIsLoading(true)
       setError(null)
-
-      // Check if MiniKit is available
-      // Use checkMiniKitSupport() for more robust World App detection
-      const { checkMiniKitSupport } = await import("@/lib/minikit")
-      const isSupported = await checkMiniKitSupport()
-      if (!isSupported || !MiniKit.isInstalled()) {
-        setError("This app only works in World App. Please open it through World App.")
-        return
-      }
 
       // Check existing authentication
       const authStatus = await AuthService.checkAuthStatus()
@@ -82,24 +74,6 @@ export default function HomePage() {
     )
   }
 
-  // Error screen
-  if (error && !user) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-2xl">!</span>
-          </div>
-          <h1 className="text-xl font-bold text-white mb-4">Authentication Error</h1>
-          <p className="text-gray-300 mb-6">{error}</p>
-          <button onClick={checkInitialAuth} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
-            Try Again
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   // Login screen
   if (!user) {
     return (
@@ -112,6 +86,7 @@ export default function HomePage() {
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">Validium-X</h1>
             <p className="text-gray-400">Official World App Mini App</p>
+            {environment === "development" && <p className="text-yellow-400 text-sm mt-2">🚧 Development Mode</p>}
           </div>
 
           {/* Login Form */}
@@ -143,6 +118,7 @@ export default function HomePage() {
           </div>
           <h1 className="text-xl font-bold mb-2">Validium-X</h1>
           <p className="text-gray-400 text-sm">Welcome back!</p>
+          {environment === "development" && <p className="text-yellow-400 text-xs mt-1">🚧 Development Mode</p>}
         </div>
 
         {/* User Info */}
@@ -180,6 +156,7 @@ export default function HomePage() {
         <div className="bg-green-900/50 border border-green-700 rounded-lg p-4 text-center">
           <h2 className="text-green-300 font-semibold mb-2">Authentication Successful!</h2>
           <p className="text-green-200 text-sm">You are now logged in and can access all features of Validium-X.</p>
+          <p className="text-green-400 text-xs mt-2">Environment: {environment}</p>
         </div>
       </div>
     </div>
