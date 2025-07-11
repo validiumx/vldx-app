@@ -4,19 +4,8 @@ export async function POST(request: NextRequest) {
   try {
     const { proof, nullifier_hash, merkle_root, verification_level, action, signal } = await request.json()
 
-    // Bypass World ID verification in dev if proof is mock
-    if (process.env.NODE_ENV !== "production" && proof === "0xMOCKPROOF") {
-      return NextResponse.json({
-        success: true,
-        verified: true,
-        nullifier_hash,
-        action: action || "claim-daily-vldx",
-        worldIdVerified: true,
-      })
-    }
-
-    // Verify the proof with World ID
-    const verifyResponse = await fetch("https://developer.worldcoin.org/api/v1/verify/app_staging_your_app_id", {
+    // Verify the proof with World ID production endpoint
+    const verifyResponse = await fetch("https://developer.worldcoin.org/api/v1/verify/app_production_your_app_id", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -34,9 +23,7 @@ export async function POST(request: NextRequest) {
     const verifyResult = await verifyResponse.json()
 
     if (verifyResult.success) {
-      // Update user's verification status in database
-      // This is where you'd update your user record for VLDX access
-
+      // Update user's verification status in database (implement as needed)
       return NextResponse.json({
         success: true,
         verified: true,

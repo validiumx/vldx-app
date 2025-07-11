@@ -4,11 +4,10 @@ import { useState } from "react"
 import { WorldButton } from "@/components/ui/world-button"
 import { WorldCard } from "@/components/ui/world-card"
 import { useAuth } from "@/hooks/use-auth"
-import { useMiniKit } from "@/hooks/use-minikit"
+import { MiniKit } from "@worldcoin/minikit-js"
 
 export function WalletConnect() {
   const { login, isLoading } = useAuth()
-  const { isInstalled, isLoading: miniKitLoading } = useMiniKit()
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState<"initial" | "connecting" | "verifying">("initial")
 
@@ -22,26 +21,18 @@ export function WalletConnect() {
         setStep("verifying")
       }, 1000)
 
+      // Check MiniKit production only
+      if (typeof MiniKit === "undefined" || !MiniKit.isInstalled()) {
+        setError("Please open this mini-app inside World App.")
+        setStep("initial")
+        return
+      }
+
       await login()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Authentication failed")
       setStep("initial")
     }
-  }
-
-  // Show minimal loading
-  if (miniKitLoading) {
-    return (
-      <WorldCard>
-        <div className="text-center p-6">
-          <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-            <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-          </div>
-          <h3 className="text-lg font-semibold mb-2">Preparing World App</h3>
-          <p className="text-gray-600 mb-4">Please wait a moment...</p>
-        </div>
-      </WorldCard>
-    )
   }
 
   if (step === "connecting") {

@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react"
 import { AuthService, type AuthUser, type AuthResponse } from "@/lib/auth-service"
 import { LoginButton } from "@/components/auth/login-button"
-import { useMiniKit } from "@/components/providers/minikit-provider"
+import { useMiniKitContext } from "@/components/providers/minikit-provider"
 
 export default function HomePage() {
-  const { environment } = useMiniKit()
+  const { environment } = useMiniKitContext()
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

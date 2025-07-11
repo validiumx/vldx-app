@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { getUserFromToken, canUserClaim, updateUserBalance } from "@/lib/auth-service"
 
 export async function POST(request: NextRequest) {
   try {
@@ -6,26 +7,19 @@ export async function POST(request: NextRequest) {
     if (!authHeader) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
     }
-
-    // Verify JWT token (mock implementation)
     const token = authHeader.replace("Bearer ", "")
-
-    // Here you would:
-    // 1. Verify the JWT token
-    // 2. Get user from database
-    // 3. Check if user can claim (24 hours since last claim)
-    // 4. Update user's balance and last claim time
-
-    // Mock implementation
-    const user = {
-      id: "user_123",
-      vixBalance: 50.96195,
-      lastClaimTime: new Date().toISOString(),
+    const user = await getUserFromToken(token)
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Invalid user" }, { status: 401 })
     }
-
+    const eligible = await canUserClaim(user)
+    if (!eligible) {
+      return NextResponse.json({ success: false, error: "Already claimed. Please wait 24 hours." }, { status: 400 })
+    }
+    const newBalance = await updateUserBalance(user, 1) // Add 1 VIX
     return NextResponse.json({
       success: true,
-      newBalance: user.vixBalance,
+      newBalance,
       nextClaimTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     })
   } catch (error) {

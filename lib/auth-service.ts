@@ -1,4 +1,6 @@
 // import { MiniKitDetector } from "./minikit-detector"
+import { prisma } from "@/lib/prisma"
+import jwt from "jsonwebtoken"
 
 export interface AuthUser {
   walletAddress: string
@@ -261,5 +263,69 @@ export class AuthService {
     } catch (error) {
       console.error("Failed to clear session:", error)
     }
+  }
+}
+
+/**
+ * Verify JWT token and fetch user from database
+ */
+export async function getUserFromToken(token: string): Promise<AuthUser | null> {
+  try {
+    const secret = process.env.JWT_SECRET || ""
+    const decoded: any = jwt.verify(token, secret)
+    if (!decoded || !decoded.walletAddress) return null
+    // Fetch user from database
+    const dbUser = await prisma.user.findUnique({ where: { walletAddress: decoded.walletAddress } })
+    if (!dbUser) return null
+    return {
+      walletAddress: dbUser.walletAddress,
+      username: dbUser.username,
+      profilePictureUrl: dbUser.profilePictureUrl,
+      isAuthenticated: true,
+      sessionToken: token,
+    }
+  } catch (error) {
+    console.error("getUserFromToken error:", error)
+    return null
+  }
+}
+
+/**
+ * Check if user is eligible to claim (e.g., 24h cooldown)
+ */
+export async function canUserClaim(user: AuthUser): Promise<boolean> {
+  try {
+    const dbUser = await prisma.user.findUnique({ where: { walletAddress: user.walletAddress } })
+    if (!dbUser) return false
+    if (!dbUser.lastClaimTime) return true
+    const lastClaim = new Date(dbUser.lastClaimTime)
+    const now = new Date()
+    const diff = now.getTime() - lastClaim.getTime()
+    return diff >= 24 * 60 * 60 * 1000 // 24 jam
+  } catch (error) {
+    console.error("canUserClaim error:", error)
+    return false
+  }
+}
+
+/**
+ * Update user balance in database and return new balance
+ */
+export async function updateUserBalance(user: AuthUser, amount: number): Promise<number> {
+  try {
+    const dbUser = await prisma.user.findUnique({ where: { walletAddress: user.walletAddress } })
+    if (!dbUser) throw new Error("User not found")
+    const newBalance = (dbUser.vixBalance || 0) + amount
+    await prisma.user.update({
+      where: { walletAddress: user.walletAddress },
+      data: {
+        vixBalance: newBalance,
+        lastClaimTime: new Date(),
+      },
+    })
+    return newBalance
+  } catch (error) {
+    console.error("updateUserBalance error:", error)
+    throw error
   }
 }
