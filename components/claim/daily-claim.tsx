@@ -4,11 +4,12 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { WorldButton } from "@/components/ui/world-button"
 import { WorldCard } from "@/components/ui/world-card"
-import { useAuth } from "@/hooks/use-auth"
+// import { useAuth } from "@/hooks/use-auth"
 import { sendHapticFeedback } from "@/lib/minikit"
 
 export function DailyClaim() {
-  const { user } = useAuth()
+  // Worldcoin guideline: auth info diambil dari MiniKit global object
+  const user = typeof window !== "undefined" && (window as any).MiniKit?.user ? (window as any).MiniKit.user : undefined
   const [canClaim, setCanClaim] = useState(false)
   const [timeUntilNextClaim, setTimeUntilNextClaim] = useState("")
   const [isClaiming, setIsClaiming] = useState(false)

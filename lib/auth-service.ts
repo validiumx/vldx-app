@@ -1,4 +1,4 @@
-import { MiniKitDetector } from "./minikit-detector"
+// import { MiniKitDetector } from "./minikit-detector"
 
 export interface AuthUser {
   walletAddress: string
@@ -20,21 +20,13 @@ export class AuthService {
   private static readonly SESSION_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
 
   /**
-   * Get MiniKit instance (real or mock)
+   * Get MiniKit instance (production only, no mock)
    */
   private static getMiniKit() {
     if (typeof window !== "undefined" && (window as any).MiniKit) {
       return (window as any).MiniKit
     }
-
-    // Fallback to imported MiniKit
-    try {
-      const { MiniKit } = require("@worldcoin/minikit-js")
-      return MiniKit
-    } catch (error) {
-      console.warn("MiniKit not available, using mock")
-      return MiniKitDetector.getMockMiniKit()
-    }
+    throw new Error("MiniKit is not available. Please open this app inside World App.")
   }
 
   /**

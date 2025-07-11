@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Button } from "@worldcoin/mini-apps-ui-kit-react"
-import { useAuth } from "@/hooks/use-auth"
+import { Button } from "@/components/ui/button"
+// import { useAuth } from "@/hooks/use-auth"
 import { useVLDXClaim } from "@/hooks/use-vldx-claim"
 import CountdownTimer from "@/components/ui/countdown-timer"
 import LogoAnimation from "@/components/ui/logo-animation"
@@ -42,7 +42,8 @@ function toBaseUnit(amount: string, decimals = 18) {
 }
 
 export function VLDXDailyClaim() {
-  const { user } = useAuth()
+  // Worldcoin guideline: auth info diambil dari MiniKit global object
+  const user = typeof window !== "undefined" && (window as any).MiniKit?.user ? (window as any).MiniKit.user : MiniKit.user
   const {
     claimInfo,
     isLoading,
@@ -66,7 +67,7 @@ export function VLDXDailyClaim() {
     const result = await executeClaim(amount)
     if (!result.success) {
       setClaimError(result.error || "Claim failed")
-      } else {
+    } else {
       // Immediately show 24-hour countdown and message after claim
       const target = new Date(Date.now() + 24 * 60 * 60 * 1000)
       setJustClaimed(true)
