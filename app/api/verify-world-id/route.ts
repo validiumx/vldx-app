@@ -5,11 +5,15 @@ export async function POST(request: NextRequest) {
     const { proof, nullifier_hash, merkle_root, verification_level, action, signal } = await request.json()
 
     // Verify the proof with World ID production endpoint
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    }
+    if (process.env.WORLDCOIN_API_KEY) {
+      headers["Authorization"] = `Bearer ${process.env.WORLDCOIN_API_KEY}`
+    }
     const verifyResponse = await fetch("https://developer.worldcoin.org/api/v1/verify/app_production_your_app_id", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         nullifier_hash,
         merkle_root,
